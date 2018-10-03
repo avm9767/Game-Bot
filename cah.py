@@ -21,10 +21,19 @@ connected_players = []
 # This function reads the file that the cards are contained in
 # and separates them into their respective lists
 def read_file(filename):
-    pass
+    filename = open(filename)
+    for line in filename.readlines():
+        line = line.strip("\n")
+        if line.endswith("[") or line.endswith("]") or line == "":
+            continue
+        card = line.lstrip().strip(',\"')
+        if line.find("_") == -1:
+            available_white_cards.append(card)
+        else:
+            available_black_cards.append(card)
 
 def shuffle_cards(deck):
-    pass
+    random.shuffle(deck)
 
 def join_game(user):
     pass
@@ -32,13 +41,18 @@ def join_game(user):
 def leave_game(user):
     pass
 
+def get_new_card():
+    card = random.choice(available_white_cards)
+    available_white_cards.remove(card)
+    return card
+
 # Called at the start of a new game; gives every player
 # a random hand of 10 white cards
 def get_new_hand():
-    pass
-
-def see_current_hand(user):
-    pass
+    new_hand = []
+    for i in range(10):
+        new_hand.append(get_new_card())
+    return new_hand
 
 # After a round of CAH where everyone (except the Card Czar)
 # has put down their white cards, they all get their cards
@@ -46,6 +60,12 @@ def see_current_hand(user):
 #
 # @param num_of_cards: the number of cards to be dealt (per person)
 def pick_up_cards(num_of_cards):
+    new_cards = []
+    for i in range(num_of_cards):
+        new_cards.append(get_new_card())
+    return new_cards
+
+def see_current_hand(user):
     pass
 
 # This function is exclusively for the current Card Czar to use;
