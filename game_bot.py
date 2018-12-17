@@ -1,4 +1,5 @@
 import random
+import cah
 
 import discord
 from discord.ext import commands
@@ -9,7 +10,7 @@ import asyncio
 # Full credit for card creation & rules by Cards Against Humanity LLC
 
 
-BOT_PREFIX = "~"
+BOT_PREFIX = "!"
 TOKEN = open("secret_key.txt").readline().strip("\n")
         # a file containing only the secret key of your bot
 
@@ -21,6 +22,18 @@ client_bot = Bot(command_prefix=BOT_PREFIX)
 async def on_ready():
     bot = client_bot.user.name
     print('"{}" is online and connected to Discord!'.format(bot))
+
+@client_bot.event
+async def joinGame():
+    # checks if there's a game currently going
+    # if there is, then it calls the join_game() function associated with that game
+    pass
+
+@client_bot.command
+async def seeCurrentHand():
+    # this is supposed to show the white cards you currently have
+    pass
+
 
 
 client_bot.run(TOKEN)
