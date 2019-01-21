@@ -23,8 +23,17 @@ async def on_ready():
     bot = client_bot.user.name
     print('"{}" is online and connected to Discord!'.format(bot))
 
-@client_bot.event
-async def joinGame():
+# Starts a new game with the game-type specified as the only param
+# If there is a game of that type already going, then it returns a
+#   message saying that they can instead join the ongoing game
+@client_bot.command(pass_context=True)
+async def startAGame(context):
+    # start the game, call all the helper functions you need, and them
+    # print a message quickly explaining how to join and play the game
+    pass
+
+@client_bot.command(pass_context=True)
+async def joinGame(context):
     # checks if there's a game currently going
     # if there is, then it calls the join_game() function associated with that game
     pass
@@ -34,6 +43,27 @@ async def seeCurrentHand():
     # this is supposed to show the white cards you currently have
     pass
 
+@client_bot.command(pass_context=True)
+async def voteOnCard(context):
+    pass
 
+@client_bot.command(pass_context=True)
+async def passUpCard(context):
+    pass
+
+@client_bot.command(pass_context=True)
+async def passUpCards(context):
+    passUpCard(context)
+
+
+@client_bot.command
+async def endGame():
+    """
+    Ends an active game
+
+    :precond: the user calling this function must be the one who called startAGame()
+    :return:
+    """
+    pass
 
 client_bot.run(TOKEN)
