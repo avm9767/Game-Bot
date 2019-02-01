@@ -56,10 +56,11 @@ def read_file(filename):
         if line.endswith("[") or line.endswith("]") or line == "":
             continue
         card = line.lstrip().strip(',\"')
-        if line.find("_") == -1:
-            available_white_cards.append(card)
-        elif line.endswith("?"):
+
+        if line.endswith("?"):
             available_black_cards.append(card)
+        elif line.find("_") == -1:
+            available_white_cards.append(card)
         else:
             available_black_cards.append(card)
     random.shuffle(available_black_cards)
@@ -182,6 +183,7 @@ def submit_cards(user, card_indices):
     for num in card_indices:
         card = connected_players[user][0].pop(int(num)-1) # removes the card from the user's hand
         answer_cards.append(card)
+        connected_players[user][0].append(get_new_card())
     current_answer_cards[index] = [user, answer_cards]
 
     if index == (len(connected_players) - 1):
@@ -220,7 +222,6 @@ def change_czar():
     global card_czar, available_black_cards, current_black_card
     all_players.append(card_czar)
     user = all_players.pop(0)
-    all_players.remove(user)
     card_czar = user
     black_card = available_black_cards.pop(0)
     current_black_card = black_card
