@@ -33,6 +33,15 @@ current_black_card = None
 connected_players = {}
 all_players = []
 
+def init(user):
+    """
+    Initializes a game of CAH by getting the decks of cards ready and adding the first user
+    (the one who started the game)
+
+    :param user: the user who started the game
+    """
+    read_file("CAH_cards.txt")
+    join_game(user)
 
 def read_file(filename):
     """
@@ -49,8 +58,12 @@ def read_file(filename):
         card = line.lstrip().strip(',\"')
         if line.find("_") == -1:
             available_white_cards.append(card)
+        elif line.endswith("?"):
+            available_black_cards.append(card)
         else:
             available_black_cards.append(card)
+    random.shuffle(available_black_cards)
+    random.shuffle(available_white_cards)
 
 
 def join_game(user):
@@ -62,13 +75,13 @@ def join_game(user):
     :param user: the user joining the game
     :return: a string announcing the user who has joined the game
     """
-    global card_czar
+    global card_czar, current_black_card, available_black_cards
     connected_players[user] = [get_new_hand(),[]]
     all_players.append(user)
     if len(connected_players) == 1:
         card_czar = user
         all_players.remove(user)
-    return "{} has joined the game of Cards Against Humanity!".format(user)
+        current_black_card = available_black_cards.pop(0)
 
 def leave_game(user):
     """
@@ -76,14 +89,18 @@ def leave_game(user):
     into the deck
 
     :param user: the user leaving
+    :return: True if the user exists and was removed, else False
     """
     leaving_user = connected_players.pop(user)
+    if leaving_user is None:
+        return False
     all_players.remove(user)
     # gotta figure out what to do when the player who left was the Card Czar
     current_hand = leaving_user[0]
     for i in range(len(current_hand)):
         available_white_cards.append(current_hand[i])
     random.shuffle(available_white_cards)
+    return True
 
 def get_new_card():
     """
@@ -144,13 +161,12 @@ def see_current_hand(user):
     :return: the user's current hand in string representation
     """
     current_cards = connected_players[user][0]
-    cards_as_string = ""
+    cards_as_string = "Here's your current hand of white cards: \n"
     idx = 1
     for card in current_cards:
-        cards_as_string += idx,":", card, "\n"
+        cards_as_string += str(idx) + ": " + card + "\n"
         idx += 1
     return cards_as_string
-    # await context.message.author.send(cards_as_string)
 
 def submit_cards(user, card_indices):
     """
@@ -159,18 +175,21 @@ def submit_cards(user, card_indices):
 
     :param user: the user that is submitting their cards
     :param card_indices: the numbers associated with the cards being submitted
+    :return: an embed of the answer cards if all players have submitted their cards, else None
     """
     global index
     answer_cards = []
     for num in card_indices:
-        card = connected_players[user][0][int(num)-1]
+        card = connected_players[user][0].pop(int(num)-1) # removes the card from the user's hand
         answer_cards.append(card)
     current_answer_cards[index] = [user, answer_cards]
 
     if index == (len(connected_players) - 1):
         index = 1
+        return print_answer_cards()
     else:
         index += 1
+        return None
 
 
 def vote_card(num):
@@ -184,34 +203,27 @@ def vote_card(num):
               to vote for their favorite card
     :param num: num the number of the corresponding card that the Czar
                 wants to vote for
+    :return: the person associated with the winning card(s)
     """
     # get the card(s) associated with the number
     # get the user associated with the card(s)
     # add the black card to their list of won black cards
     winning_card = current_answer_cards[int(num)]
     winner = winning_card[0]
-    print_round_winner(winner)
     connected_players[winner][1].append(current_black_card)
-
-def print_round_winner(winner):
-    """
-    Prints the user that won the round. This function gets called after
-    the Card Czar has chosen which card was best
-
-    :param winner: the winner of the round
-    :return: a string announcing who the winner was
-    """
-    return "{} won the black card this round!".format_map(winner)
+    return winner
 
 def change_czar():
     """
     Changes who the Card Czar is when a round ends
     """
-    global card_czar
+    global card_czar, available_black_cards, current_black_card
     all_players.append(card_czar)
     user = all_players.pop(0)
     all_players.remove(user)
     card_czar = user
+    black_card = available_black_cards.pop(0)
+    current_black_card = black_card
 
 def get_points(user):
     """
@@ -240,13 +252,16 @@ def print_black_card(): # I used to have a card parameter here
             # current Card Czar's name in the braces
 
     # to post the embed, do 'await bot_client.say(embed)' or 'await bot_client.send_message(message.channel, embed=embed)'
-    embed = discord.Embed(title="Current card Czar: {}".format(card_czar),
+    embed = discord.Embed(title="Current card Czar: {}".format(card_czar.name),
                           description=current_black_card,
                           color=discord.Color.blue())
     embed.set_author(name="Black card in play")
     avatar = card_czar.avatar_url
+    # print(avatar)
     if avatar == "":
         avatar = card_czar.default_avatar_url
+    # avatar = card_czar.default_avatar_url
+    print(avatar)
     embed.set_thumbnail(url=avatar)
     return embed
 
@@ -278,3 +293,18 @@ def print_answer_cards():
                           color=discord.Color.red())
     embed.set_author(name="Answer cards submitted:")
     return embed
+
+def get_winner():
+    """
+    Gets the user that has the most black cards when a game of CAH has ended
+
+    :return: the user that had the most black cards
+    """
+    winner = None
+    max_cards_won = 0
+    for user in connected_players.keys():
+        black_cards = connected_players[user][1]
+        if len(black_cards) > max_cards_won:
+            winner = user
+            max_cards_won = len(black_cards)
+    return winner
